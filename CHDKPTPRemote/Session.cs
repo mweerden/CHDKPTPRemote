@@ -247,15 +247,18 @@ namespace CHDKPTPRemote
             }
 
             // convert uyvyyy to rgbrgbrgbrgb
-            byte[] pixels = new byte[720 * 240 * 3];
-            for (int x = image_start, x2 = 0; x < image_end; x += 6, x2 += 12)
+            byte[] pixels = new byte[vb_max_width * vb_max_height * 3];
+            for (int img_idx = image_start, pxls_idx = 0; img_idx < image_end; img_idx += ((vb_buffer_width - vb_max_width) * 6) / 4)
             {
-                sbyte u = (sbyte)img[x];
-                sbyte v = (sbyte)img[x + 2];
-                add_pixel(pixels, x2, img[x + 1], u, v);
-                add_pixel(pixels, x2 + 3, img[x + 3], u, v);
-                add_pixel(pixels, x2 + 6, img[x + 4], u, v);
-                add_pixel(pixels, x2 + 9, img[x + 5], u, v);
+                for (int x = 0; x < vb_max_width; x++, img_idx += 6, pxls_idx += 12)
+                {
+                    sbyte u = (sbyte)img[img_idx];
+                    sbyte v = (sbyte)img[img_idx + 2];
+                    add_pixel(pixels, pxls_idx, img[img_idx + 1], u, v);
+                    add_pixel(pixels, pxls_idx + 3, img[img_idx + 3], u, v);
+                    add_pixel(pixels, pxls_idx + 6, img[img_idx + 4], u, v);
+                    add_pixel(pixels, pxls_idx + 9, img[img_idx + 5], u, v);
+                }
             }
 
             // copy pixels to bitmap
