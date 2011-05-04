@@ -1,0 +1,318 @@
+Index: include/platform.h
+===================================================================
+--- include/platform.h	(revision 1150)
++++ include/platform.h	(working copy)
+@@ -242,6 +242,17 @@
+ void vid_turn_off_updates();
+ void vid_turn_on_updates();
+ 
++int vid_get_presentation_width();
++int vid_get_presentation_height();
++int vid_get_viewport_max_width();
++int vid_get_viewport_max_height();
++int vid_get_viewport_width_proper();
++int vid_get_viewport_height_proper();
++int vid_get_viewport_buffer_width_proper();
++void *vid_get_viewport_active_buffer();
++void *vid_get_bitmap_active_buffer();
++void vid_get_bitmap_active_palette(int *dest); // dest should be allocate beforehand and have room for at least 16 elements
++
+ /******************************************************************/
+ 
+ void *hook_raw_fptr();
+Index: platform/g12/lib.c
+===================================================================
+--- platform/g12/lib.c	(revision 1150)
++++ platform/g12/lib.c	(working copy)
+@@ -114,3 +114,5 @@
+ int vid_get_viewport_row_offset() {
+ 	return (vid_get_viewport_buffer_width() - vid_get_viewport_width()) * 3;
+ }
++
++int vid_get_viewport_max_height() { return 480; }
+Index: platform/generic/wrappers.c
+===================================================================
+--- platform/generic/wrappers.c	(revision 1150)
++++ platform/generic/wrappers.c	(working copy)
+@@ -1234,3 +1234,66 @@
+ }
+ */
+ 
++int __attribute__((weak)) vid_get_presentation_width()
++{
++  return 360;
++}
++
++int __attribute__((weak)) vid_get_presentation_height()
++{
++  return 240;
++}
++
++int __attribute__((weak)) vid_get_viewport_max_width()
++{
++  return 720;
++}
++
++int __attribute__((weak)) vid_get_viewport_max_height()
++{
++  return 240;
++}
++
++int __attribute__((weak)) vid_get_viewport_width_proper()
++{
++  return vid_get_viewport_max_width();
++}
++
++int __attribute__((weak)) vid_get_viewport_height_proper()
++{
++  return vid_get_viewport_max_height();
++}
++
++int __attribute__((weak)) vid_get_viewport_buffer_width_proper()
++{
++  return vid_get_viewport_max_width();
++}
++
++
++void __attribute__((weak)) *vid_get_viewport_active_buffer()
++{
++  void *p;
++
++  if ( (mode_get()&MODE_MASK) == MODE_PLAY )
++  {
++    p = vid_get_viewport_fb_d();
++  } else {
++    p = vid_get_viewport_live_fb();
++    if ( !p )
++    {
++      p = vid_get_viewport_fb();
++    }
++  }
++  
++  return p;
++}
++
++void __attribute__((weak)) *vid_get_bitmap_active_buffer()
++{
++  return vid_get_bitmap_fb(); // XXX does not get the active buffer!
++}
++
++void __attribute__((weak)) vid_get_bitmap_active_palette(int *dest)
++{
++  memset(dest,0,4*16); // XXX by default return only fully transparent colours
++}
+Index: platform/ixus870_sd880/sub/101a/lib.c
+===================================================================
+--- platform/ixus870_sd880/sub/101a/lib.c	(revision 1150)
++++ platform/ixus870_sd880/sub/101a/lib.c	(working copy)
+@@ -22,8 +22,8 @@
+ 
+ void *vid_get_viewport_live_fb()
+ {
+-    void **fb=(void **)0x227C;
+-    unsigned char buff = *((unsigned char*)0x20DC);
++    void **fb=(void **)0x725C; // 0xff8c2e9c
++    unsigned char buff = *((unsigned char*)0x70D8); // 0xff8c2e24
+     if (buff == 0) buff = 2;  else buff--;    
+     return fb[buff];
+ }
+@@ -77,3 +77,13 @@
+ long vid_get_bitmap_buffer_width() { return 360; }
+ 
+ long vid_get_bitmap_buffer_height() { return 240; }
++
++void vid_get_bitmap_active_palette(int *pal)
++{
++  unsigned int *syspal=*(unsigned int**)(0x7C50+0x20); // sub_FF8E2924
++  int i; 
++  for (i=0;i<16; i++) { 
++   pal[i]=syspal[i]; 
++   if ((pal[i]>>24)==3) pal[i]|=0xFF000000; 
++  } 
++}
+Index: platform/ixus870_sd880/sub/102b/lib.c
+===================================================================
+--- platform/ixus870_sd880/sub/102b/lib.c	(revision 1150)
++++ platform/ixus870_sd880/sub/102b/lib.c	(working copy)
+@@ -22,8 +22,8 @@
+ 
+ void *vid_get_viewport_live_fb()
+ {
+-    void **fb=(void **)0x227C;
+-    unsigned char buff = *((unsigned char*)0x20DC);
++    void **fb=(void **)0x725C;
++    unsigned char buff = *((unsigned char*)0x70D8);
+     if (buff == 0) buff = 2;  else buff--;    
+     return fb[buff];
+ }
+Index: platform/ixus870_sd880/sub/100e/lib.c
+===================================================================
+--- platform/ixus870_sd880/sub/100e/lib.c	(revision 1150)
++++ platform/ixus870_sd880/sub/100e/lib.c	(working copy)
+@@ -22,8 +22,8 @@
+ 
+ void *vid_get_viewport_live_fb()
+ {
+-    void **fb=(void **)0x227C;
+-    unsigned char buff = *((unsigned char*)0x20DC);
++    void **fb=(void **)0x725C;
++    unsigned char buff = *((unsigned char*)0x70D8);
+     if (buff == 0) buff = 2;  else buff--;    
+     return fb[buff];
+ }
+Index: core/ptp.c
+===================================================================
+--- core/ptp.c	(revision 1150)
++++ core/ptp.c	(working copy)
+@@ -286,6 +286,7 @@
+       break;
+ 
+     case PTP_CHDK_CallFunction:
++      if ( (param2 & 0x1) == 0 )
+       {
+         int s;
+         int *buf = (int *) malloc((10+1)*sizeof(int));
+@@ -308,6 +309,10 @@
+ 
+         free(buf);
+         break;
++      } else { // if ( (param2 & 0x1) != 0 )
++        ptp.num_param = 1;
++        ptp.param1 = ((int (*)(ptp_data*,int,int)) param3)(data,param4,param5);
++        break;
+       }
+ 
+     case PTP_CHDK_TempData:
+Index: core/ptp.h
+===================================================================
+--- core/ptp.h	(revision 1150)
++++ core/ptp.h	(working copy)
+@@ -1,6 +1,6 @@
+ #ifndef __CHDK_PTP_H
+ #define __CHDK_PTP_H
+-#define PTP_CHDK_VERSION_MAJOR 1  // increase only with backwards incompatible changes (and reset minor)
++#define PTP_CHDK_VERSION_MAJOR 0x10002  // increase only with backwards incompatible changes (and reset minor)
+ #define PTP_CHDK_VERSION_MINOR 0  // increase with extensions of functionality
+ /*
+ protocol version history
+@@ -29,7 +29,10 @@
+   PTP_CHDK_SetMemory,       // param2 is address
+                             // param3 is size (in bytes)
+                             // data is new memory block
+-  PTP_CHDK_CallFunction,    // data is array of function pointer and (long) arguments  (max: 10 args)
++  PTP_CHDK_CallFunction,    // param2 are flags: 0x1 means use rest of params for pointer and args to allow function to send back data
++                            // (return) data is either:
++                            //   - array of function pointer and (long) arguments if flag 0x1 is not set  (max: 10 args)
++                            //   - return data provided by called function if flag 0x1 is set
+                             // return param1 is return value
+   PTP_CHDK_TempData,        // data is data to be stored for later
+                             // param2 is for the TD flags below
+Index: core/luascript.c
+===================================================================
+--- core/luascript.c	(revision 1150)
++++ core/luascript.c	(working copy)
+@@ -1359,6 +1359,96 @@
+   return switch_mode_usb(mode);
+ }
+ 
++static int handle_video_transfer(ptp_data *data, int flags, int arg2)
++{
++  int total_size, tmp, tmp2;
++  int live_buf_size = 0; // XXX precalculate as it is a constant?
++  int bitmap_buf_size = 0; // XXX precalculate as it is a constant?
++  char type;
++
++  total_size = 0;
++  if ( flags & 0x1 ) // live buffer
++  {
++    live_buf_size = (vid_get_viewport_buffer_width_proper()*vid_get_viewport_max_height()*6)/4;
++    total_size += 1 + live_buf_size;
++  }
++  if ( flags & 0x2 ) // live image rect
++  {
++    total_size += 1 + 4*4;
++  }
++  if ( flags & 0x4 ) // bitmap buffer
++  {
++    bitmap_buf_size = vid_get_bitmap_buffer_width()*vid_get_bitmap_screen_height();
++    total_size += 1 + bitmap_buf_size;
++  }
++  if ( flags & 0x8 ) // bitmap palette
++  {
++    total_size += 1 + 4*16;
++  }
++
++  tmp = total_size;
++  if ( flags & 0x1 )
++  {
++    type = 0; data->send_data(data->handle,&type,1,tmp,0,0,0); tmp = 0;
++    data->send_data(data->handle,vid_get_viewport_active_buffer(),live_buf_size,0,0,0,0);
++  }
++  if ( flags & 0x2 )
++  {
++    type = 1; data->send_data(data->handle,&type,1,tmp,0,0,0); tmp = 0;
++    tmp2 = vid_get_viewport_xoffset();
++    data->send_data(data->handle,(char *)&tmp2,4,0,0,0,0);
++    tmp2 = vid_get_viewport_yoffset();
++    data->send_data(data->handle,(char *)&tmp2,4,0,0,0,0);
++    tmp2 = vid_get_viewport_width_proper();
++    data->send_data(data->handle,(char *)&tmp2,4,0,0,0,0);
++    tmp2 = vid_get_viewport_height_proper();
++    data->send_data(data->handle,(char *)&tmp2,4,0,0,0,0);
++  }
++  if ( flags & 0x4 )
++  {
++    type = 2; data->send_data(data->handle,&type,1,tmp,0,0,0); tmp = 0;
++    data->send_data(data->handle,vid_get_bitmap_active_buffer(),bitmap_buf_size,0,0,0,0);
++  }
++  if ( flags & 0x8 )
++  {
++    int buf[16];
++    type = 3; data->send_data(data->handle,&type,1,tmp,0,0,0); tmp = 0;
++    vid_get_bitmap_active_palette(buf);
++    data->send_data(data->handle,(char *)buf,4*16,0,0,0,0);
++  }
++
++  return 0;
++}
++
++static int luaCB_get_video_details( lua_State* L )
++{
++  struct {
++    int transfer_function;
++    int width;
++    int height;
++    int vp_max_width;
++    int vp_max_height;
++    int vp_buffer_width;
++    int bm_max_width;
++    int bm_max_height;
++    int bm_buffer_width;
++  } details;
++
++  details.transfer_function = (int) handle_video_transfer;
++  details.width = vid_get_presentation_width();
++  details.height = vid_get_presentation_height();
++  details.vp_max_width = vid_get_viewport_max_width();
++  details.vp_max_height = vid_get_viewport_max_height();
++  details.vp_buffer_width = vid_get_viewport_buffer_width_proper();
++  details.bm_max_width = vid_get_bitmap_screen_width();
++  details.bm_max_height = vid_get_bitmap_screen_height();
++  details.bm_buffer_width = vid_get_bitmap_buffer_width();
++
++  lua_pushlstring( L, (char *) &details, sizeof(details) );
++
++  return 1;
++}
++
+ /*
+ pack the lua args into a buffer to pass to the native code calling functions 
+ currently only handles strings/numbers
+@@ -1715,6 +1805,7 @@
+    FUNC(set_record);
+ 
+    FUNC(switch_mode_usb);
++   FUNC(get_video_details);
+ 
+ #ifdef OPT_LUA_CALL_NATIVE
+    FUNC(call_event_proc);
