@@ -115,6 +115,7 @@ namespace CHDKPTPRemote
             }
         }
 
+        // TODO: should be able to distinguish "real" exceptions and script errors
         public object ExecuteScript(string script, bool return_string_as_byte_array = false)
         {
             int script_id;

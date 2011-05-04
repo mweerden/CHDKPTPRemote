@@ -117,7 +117,7 @@ namespace chdk_ptp_test
             }
             LogLine("connected.");
             connected = true;
-            label1.Text = "Connected to: " + connected_device.ToString();
+            statuslabel.Text = "Connected to: " + connected_device.ToString();
 
             try
             {
@@ -147,7 +147,7 @@ namespace chdk_ptp_test
                 }
 
                 LogLine("closed.");
-                label1.Text = "Not connected";
+                statuslabel.Text = "Not connected";
                 connected_device = null;
                 connected = false;
             }
@@ -189,7 +189,7 @@ namespace chdk_ptp_test
             LogLine("switching to record mode...");
             try
             {
-                session.ExecuteScript("switch_mode_usb(1);");
+                session.ExecuteScript("switch_mode_usb(1)");
             }
             catch (Exception ex)
             {
@@ -208,7 +208,7 @@ namespace chdk_ptp_test
             LogLine("switching to playback mode...");
             try
             {
-                session.ExecuteScript("switch_mode_usb(0);");
+                session.ExecuteScript("switch_mode_usb(0)");
             }
             catch (Exception ex)
             {
@@ -217,6 +217,64 @@ namespace chdk_ptp_test
                 return;
             }
             LogLine("done.");
+        }
+
+        private void shutdownbutton_Click(object sender, EventArgs e)
+        {
+            LogLine("shutting camera down... (may result in exceptions due to loss of connection)");
+            try
+            {
+                session.ExecuteScript("shut_down()");
+            }
+            catch (Exception ex)
+            {
+                LogLine("exception: " + ex.Message + Environment.NewLine + ex.StackTrace.ToString());
+            }
+            disconnectbutton.PerformClick();
+            LogLine("shut down complete.");
+        }
+
+        private void execbutton_Click(object sender, EventArgs e)
+        {
+            LogLine("executing script: " + scriptedit.Text);
+            try
+            {
+                object r = session.ExecuteScript(scriptedit.Text);
+                if (r == null)
+                {
+                    outputlabel.Text = "(none)";
+                }
+                else if (r.GetType() == typeof(bool))
+                {
+                    outputlabel.Text = r.ToString();
+                }
+                else if (r.GetType() == typeof(int))
+                {
+                    outputlabel.Text = r.ToString();
+                }
+                else if (r.GetType() == typeof(string))
+                {
+                    outputlabel.Text = (string)r;
+                }
+                else
+                {
+                    outputlabel.Text = "(unsupported type)";
+                }
+            }
+            catch (Exception ex)
+            {
+                LogLine("exception: " + ex.Message + Environment.NewLine + ex.StackTrace.ToString());
+                outputlabel.Text = ex.Message;
+            }
+            LogLine("done.");
+        }
+
+        private void scriptedit_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == '\n')
+            {
+                execbutton.PerformClick();
+            }
         }
 
         private void Form1_Paint(object sender, PaintEventArgs e)

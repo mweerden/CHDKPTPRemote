@@ -37,11 +37,16 @@ namespace chdk_ptp_test
             this.connect_button = new System.Windows.Forms.Button();
             this.refreshbutton = new System.Windows.Forms.Button();
             this.disconnectbutton = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
+            this.statuslabel = new System.Windows.Forms.Label();
             this.getimagebutton = new System.Windows.Forms.Button();
             this.recordbutton = new System.Windows.Forms.Button();
             this.playbackbutton = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
+            this.shutdownbutton = new System.Windows.Forms.Button();
+            this.execbutton = new System.Windows.Forms.Button();
+            this.scriptedit = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.outputlabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // devicecombobox
@@ -82,18 +87,18 @@ namespace chdk_ptp_test
             this.disconnectbutton.UseVisualStyleBackColor = true;
             this.disconnectbutton.Click += new System.EventHandler(this.disconnectbutton_Click);
             // 
-            // label1
+            // statuslabel
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 44);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(78, 13);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "Not connected";
+            this.statuslabel.AutoSize = true;
+            this.statuslabel.Location = new System.Drawing.Point(12, 44);
+            this.statuslabel.Name = "statuslabel";
+            this.statuslabel.Size = new System.Drawing.Size(78, 13);
+            this.statuslabel.TabIndex = 4;
+            this.statuslabel.Text = "Not connected";
             // 
             // getimagebutton
             // 
-            this.getimagebutton.Location = new System.Drawing.Point(12, 68);
+            this.getimagebutton.Location = new System.Drawing.Point(12, 118);
             this.getimagebutton.Name = "getimagebutton";
             this.getimagebutton.Size = new System.Drawing.Size(75, 23);
             this.getimagebutton.TabIndex = 5;
@@ -103,7 +108,7 @@ namespace chdk_ptp_test
             // 
             // recordbutton
             // 
-            this.recordbutton.Location = new System.Drawing.Point(170, 68);
+            this.recordbutton.Location = new System.Drawing.Point(170, 118);
             this.recordbutton.Name = "recordbutton";
             this.recordbutton.Size = new System.Drawing.Size(75, 23);
             this.recordbutton.TabIndex = 6;
@@ -113,7 +118,7 @@ namespace chdk_ptp_test
             // 
             // playbackbutton
             // 
-            this.playbackbutton.Location = new System.Drawing.Point(251, 68);
+            this.playbackbutton.Location = new System.Drawing.Point(251, 118);
             this.playbackbutton.Name = "playbackbutton";
             this.playbackbutton.Size = new System.Drawing.Size(75, 23);
             this.playbackbutton.TabIndex = 7;
@@ -124,22 +129,72 @@ namespace chdk_ptp_test
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(127, 73);
+            this.label2.Location = new System.Drawing.Point(127, 123);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(37, 13);
             this.label2.TabIndex = 8;
             this.label2.Text = "Mode:";
             // 
+            // shutdownbutton
+            // 
+            this.shutdownbutton.Location = new System.Drawing.Point(413, 39);
+            this.shutdownbutton.Name = "shutdownbutton";
+            this.shutdownbutton.Size = new System.Drawing.Size(75, 23);
+            this.shutdownbutton.TabIndex = 9;
+            this.shutdownbutton.Text = "Shut Down";
+            this.shutdownbutton.UseVisualStyleBackColor = true;
+            this.shutdownbutton.Click += new System.EventHandler(this.shutdownbutton_Click);
+            // 
+            // execbutton
+            // 
+            this.execbutton.Location = new System.Drawing.Point(413, 68);
+            this.execbutton.Name = "execbutton";
+            this.execbutton.Size = new System.Drawing.Size(75, 23);
+            this.execbutton.TabIndex = 10;
+            this.execbutton.Text = "Execute";
+            this.execbutton.UseVisualStyleBackColor = true;
+            this.execbutton.Click += new System.EventHandler(this.execbutton_Click);
+            // 
+            // scriptedit
+            // 
+            this.scriptedit.Location = new System.Drawing.Point(12, 70);
+            this.scriptedit.Name = "scriptedit";
+            this.scriptedit.Size = new System.Drawing.Size(395, 20);
+            this.scriptedit.TabIndex = 11;
+            this.scriptedit.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.scriptedit_KeyPress);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(12, 97);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(70, 13);
+            this.label3.TabIndex = 12;
+            this.label3.Text = "Script output:";
+            // 
+            // outputlabel
+            // 
+            this.outputlabel.AutoSize = true;
+            this.outputlabel.Location = new System.Drawing.Point(88, 97);
+            this.outputlabel.Name = "outputlabel";
+            this.outputlabel.Size = new System.Drawing.Size(0, 13);
+            this.outputlabel.TabIndex = 13;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(500, 372);
+            this.ClientSize = new System.Drawing.Size(500, 406);
+            this.Controls.Add(this.outputlabel);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.scriptedit);
+            this.Controls.Add(this.execbutton);
+            this.Controls.Add(this.shutdownbutton);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.playbackbutton);
             this.Controls.Add(this.recordbutton);
             this.Controls.Add(this.getimagebutton);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.statuslabel);
             this.Controls.Add(this.disconnectbutton);
             this.Controls.Add(this.refreshbutton);
             this.Controls.Add(this.connect_button);
@@ -160,11 +215,16 @@ namespace chdk_ptp_test
         private System.Windows.Forms.Button connect_button;
         private System.Windows.Forms.Button refreshbutton;
         private System.Windows.Forms.Button disconnectbutton;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label statuslabel;
         private System.Windows.Forms.Button getimagebutton;
         private System.Windows.Forms.Button recordbutton;
         private System.Windows.Forms.Button playbackbutton;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button shutdownbutton;
+        private System.Windows.Forms.Button execbutton;
+        private System.Windows.Forms.TextBox scriptedit;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label outputlabel;
     }
 }
 
