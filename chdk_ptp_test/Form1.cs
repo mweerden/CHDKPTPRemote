@@ -24,6 +24,7 @@ namespace chdk_ptp_test
         private CHDKPTPDevice connected_device = null;
         private Session session = null;
         private Bitmap live_image = null;
+        private Bitmap live_overlay = null;
         private StreamWriter Log;
         private int display_width, display_height;
 
@@ -221,6 +222,9 @@ namespace chdk_ptp_test
 
         private void shutdownbutton_Click(object sender, EventArgs e)
         {
+            if (!connected)
+                return;
+
             LogLine("shutting camera down... (may result in exceptions due to loss of connection)");
             try
             {
@@ -236,6 +240,9 @@ namespace chdk_ptp_test
 
         private void execbutton_Click(object sender, EventArgs e)
         {
+            if (!connected)
+                return;
+
             LogLine("executing script: " + scriptedit.Text);
             try
             {
@@ -277,12 +284,46 @@ namespace chdk_ptp_test
             }
         }
 
+        private void overlaybutton_Click(object sender, EventArgs e)
+        {
+            if (!connected)
+                return;
+
+            LogLine("getting live overlay...");
+            try
+            {
+                if (live_overlay == null)
+                {
+                    live_overlay = session.GetLiveOverlay();
+                }
+                else
+                {
+                    session.GetLiveOverlay(live_overlay);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogLine("exception: " + ex.Message + Environment.NewLine + ex.StackTrace.ToString());
+                MessageBox.Show("could not get live overlay: " + ex.Message + "\n\n" + ex.StackTrace.ToString());
+                return;
+            }
+
+            Invalidate();
+            LogLine("done.");
+
+        }
+
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             if (live_image != null)
             {
                 e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
                 e.Graphics.DrawImage(live_image, getimagebutton.Left, getimagebutton.Bottom + 10, display_width, display_height);
+            }
+            if (live_overlay != null)
+            {
+                e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                e.Graphics.DrawImage(live_overlay, getimagebutton.Left, getimagebutton.Bottom + 10, display_width, display_height);
             }
         }
 

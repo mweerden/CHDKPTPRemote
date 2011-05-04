@@ -41,12 +41,13 @@ namespace chdk_ptp_test
             this.getimagebutton = new System.Windows.Forms.Button();
             this.recordbutton = new System.Windows.Forms.Button();
             this.playbackbutton = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
             this.shutdownbutton = new System.Windows.Forms.Button();
             this.execbutton = new System.Windows.Forms.Button();
             this.scriptedit = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.outputlabel = new System.Windows.Forms.Label();
+            this.overlaybutton = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // devicecombobox
@@ -108,7 +109,7 @@ namespace chdk_ptp_test
             // 
             // recordbutton
             // 
-            this.recordbutton.Location = new System.Drawing.Point(170, 118);
+            this.recordbutton.Location = new System.Drawing.Point(332, 118);
             this.recordbutton.Name = "recordbutton";
             this.recordbutton.Size = new System.Drawing.Size(75, 23);
             this.recordbutton.TabIndex = 6;
@@ -118,22 +119,13 @@ namespace chdk_ptp_test
             // 
             // playbackbutton
             // 
-            this.playbackbutton.Location = new System.Drawing.Point(251, 118);
+            this.playbackbutton.Location = new System.Drawing.Point(413, 118);
             this.playbackbutton.Name = "playbackbutton";
             this.playbackbutton.Size = new System.Drawing.Size(75, 23);
             this.playbackbutton.TabIndex = 7;
             this.playbackbutton.Text = "Playback";
             this.playbackbutton.UseVisualStyleBackColor = true;
             this.playbackbutton.Click += new System.EventHandler(this.playbackbutton_Click);
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(127, 123);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(37, 13);
-            this.label2.TabIndex = 8;
-            this.label2.Text = "Mode:";
             // 
             // shutdownbutton
             // 
@@ -180,11 +172,31 @@ namespace chdk_ptp_test
             this.outputlabel.Size = new System.Drawing.Size(0, 13);
             this.outputlabel.TabIndex = 13;
             // 
+            // overlaybutton
+            // 
+            this.overlaybutton.Location = new System.Drawing.Point(93, 118);
+            this.overlaybutton.Name = "overlaybutton";
+            this.overlaybutton.Size = new System.Drawing.Size(75, 23);
+            this.overlaybutton.TabIndex = 14;
+            this.overlaybutton.Text = "Get Overlay";
+            this.overlaybutton.UseVisualStyleBackColor = true;
+            this.overlaybutton.Click += new System.EventHandler(this.overlaybutton_Click);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(289, 123);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(37, 13);
+            this.label2.TabIndex = 8;
+            this.label2.Text = "Mode:";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(500, 406);
+            this.Controls.Add(this.overlaybutton);
             this.Controls.Add(this.outputlabel);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.scriptedit);
@@ -219,12 +231,13 @@ namespace chdk_ptp_test
         private System.Windows.Forms.Button getimagebutton;
         private System.Windows.Forms.Button recordbutton;
         private System.Windows.Forms.Button playbackbutton;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button shutdownbutton;
         private System.Windows.Forms.Button execbutton;
         private System.Windows.Forms.TextBox scriptedit;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label outputlabel;
+        private System.Windows.Forms.Button overlaybutton;
+        private System.Windows.Forms.Label label2;
     }
 }
 

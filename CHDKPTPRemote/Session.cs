@@ -25,9 +25,12 @@ namespace CHDKPTPRemote
         private uint image_tranfer_function;
         private int width;
         private int height;
-        private int vb_max_width;
-        private int vb_max_height;
-        private int vb_buffer_width;
+        private int vp_max_width;
+        private int vp_max_height;
+        private int vp_buffer_width;
+        private int bm_max_width;
+        private int bm_max_height;
+        private int bm_buffer_width;
 
         public Session(CHDKPTPDevice dev)
         {
@@ -169,9 +172,12 @@ namespace CHDKPTPRemote
                 image_tranfer_function = (uint)int_from_bytes(buf, 0);
                 width = int_from_bytes(buf, 4);
                 height = int_from_bytes(buf, 8);
-                vb_max_width = int_from_bytes(buf, 12);
-                vb_max_height = int_from_bytes(buf, 16);
-                vb_buffer_width = int_from_bytes(buf, 20);
+                vp_max_width = int_from_bytes(buf, 12);
+                vp_max_height = int_from_bytes(buf, 16);
+                vp_buffer_width = int_from_bytes(buf, 20);
+                bm_max_width = int_from_bytes(buf, 24);
+                bm_max_height = int_from_bytes(buf, 28);
+                bm_buffer_width = int_from_bytes(buf, 32);
             }
             else
             {
@@ -210,7 +216,7 @@ namespace CHDKPTPRemote
                 {
                     throw new Exception("cannot reuse Bitmap: PixelFormat is not Format24bppRgb");
                 }
-                if (old_img.Width != vb_max_width || old_img.Height != vb_max_height)
+                if (old_img.Width != vp_max_width || old_img.Height != vp_max_height)
                 {
                     throw new Exception("cannot reuse Bitmap; dimensions are incorrect");
                 }
@@ -235,7 +241,7 @@ namespace CHDKPTPRemote
                         int_from_bytes(img, image_end + 13)
                         );
                 }
-                else // image comes second
+                else // img[0] == 1; image comes second
                 {
                     image_start += 1 + 4 * 4;
                     active_area = new Rectangle(
@@ -248,10 +254,10 @@ namespace CHDKPTPRemote
             }
 
             // convert uyvyyy to rgbrgbrgbrgb
-            byte[] pixels = new byte[vb_max_width * vb_max_height * 3];
-            for (int img_idx = image_start, pxls_idx = 0; img_idx < image_end; img_idx += ((vb_buffer_width - vb_max_width) * 6) / 4)
+            byte[] pixels = new byte[vp_max_width * vp_max_height * 3];
+            for (int img_idx = image_start, pxls_idx = 0; img_idx < image_end; img_idx += ((vp_buffer_width - vp_max_width) * 6) / 4)
             {
-                for (int x = 0; x < vb_max_width; x++, img_idx += 6, pxls_idx += 12)
+                for (int x = 0; x < vp_max_width; x++, img_idx += 6, pxls_idx += 12)
                 {
                     sbyte u = (sbyte)img[img_idx];
                     sbyte v = (sbyte)img[img_idx + 2];
@@ -264,8 +270,8 @@ namespace CHDKPTPRemote
 
             // copy pixels to bitmap
             if (old_img == null)
-                old_img = new Bitmap(vb_max_width, vb_max_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            System.Drawing.Imaging.BitmapData bmpd = old_img.LockBits(new Rectangle(0, 0, vb_max_width, vb_max_height), System.Drawing.Imaging.ImageLockMode.WriteOnly, old_img.PixelFormat);
+                old_img = new Bitmap(vp_max_width, vp_max_height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            System.Drawing.Imaging.BitmapData bmpd = old_img.LockBits(new Rectangle(0, 0, vp_max_width, vp_max_height), System.Drawing.Imaging.ImageLockMode.WriteOnly, old_img.PixelFormat);
             System.Runtime.InteropServices.Marshal.Copy(pixels, 0, bmpd.Scan0, pixels.Length);
             old_img.UnlockBits(bmpd);
 
@@ -282,6 +288,98 @@ namespace CHDKPTPRemote
         {
             active_area = new Rectangle();
             return GetLiveImage(true, ref active_area, old_img);
+        }
+
+        private int ayuv2argb(byte a, byte y, sbyte u, sbyte v)
+        {
+            byte r = clip(((y << 12) + v * 5743 + 2048) >> 12); // r
+            byte g = clip(((y << 12) - u * 1411 - v * 2925 + 2048) >> 12); // g
+            byte b = clip(((y << 12) + u * 7258 + 2048) >> 12); // b
+
+            return (a << 24) | (r << 16) | (g << 8) | b;
+        }
+        public Bitmap GetLiveOverlay(Bitmap old_img = null)
+        {
+            if (old_img != null)
+            {
+                if (old_img.PixelFormat != System.Drawing.Imaging.PixelFormat.Format32bppArgb)
+                {
+                    throw new Exception("cannot reuse Bitmap: PixelFormat is not Format32bppArgb");
+                }
+                if (old_img.Width != bm_max_width || old_img.Height != bm_max_height)
+                {
+                    throw new Exception("cannot reuse Bitmap; dimensions are incorrect");
+                }
+            }
+
+            GetVideoDetails();
+
+            byte[] img;
+            _session.CHDK_CallFunction(image_tranfer_function, 0xc, 0, out img);
+            File.WriteAllBytes("live_overlay.bmp",img);
+
+            int palette_start = 1;
+            int image_start = 1;
+            int image_end = img.Length;
+            if (img[0] == 2) // image comes first
+            {
+                image_end -= 1 + 4 * 16;
+                palette_start = image_end + 1;
+            }
+            else // img[0] == 3; image comes second
+            {
+                image_start += 1 + 4 * 16;
+            }
+
+            // TODO: make static and only fill when palette actually changed
+            int[] palette = new int[256];
+            for (int i = 0; i < 256; i++)
+            {
+                int off_a = 4*(i & 0xf);
+                int off_b = 4*(i >> 4);
+
+                int v = (sbyte)img[palette_start + off_a] + (sbyte)img[palette_start + off_b];
+                if (v > 127)
+                    v = 127;
+                else if (v < -128)
+                    v = -128;
+
+                int u = (sbyte)img[palette_start + off_a+1] + (sbyte)img[palette_start + off_b+1];
+                if (u > 127)
+                    u = 127;
+                else if (u < -128)
+                    u = -128;
+
+                int y = img[palette_start + off_a+2] + img[palette_start + off_b+2];
+                if (y > 255)
+                    y = 255;
+
+                int a = (img[palette_start + off_a+3] + img[palette_start + off_b+3])/2;
+                if (a > 255)
+                    a = 255;
+
+                palette[i] = ayuv2argb((byte)a, (byte)y, (sbyte)u, (sbyte)v);
+            }
+
+
+            // convert index to argb
+            int[] pixels = new int[bm_max_width * bm_max_height];
+            for (int img_idx = image_start, pxls_idx = 0; img_idx < image_end; img_idx += bm_buffer_width - bm_max_width)
+            {
+                for (int x = 0; x < bm_max_width; x++, img_idx++, pxls_idx++)
+                {
+                    pixels[pxls_idx] = palette[img[img_idx]];
+                }
+            }
+
+            // copy pixels to bitmap
+            if (old_img == null)
+                old_img = new Bitmap(bm_max_width, bm_max_height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            System.Drawing.Imaging.BitmapData bmpd = old_img.LockBits(new Rectangle(0, 0, bm_max_width, bm_max_height), System.Drawing.Imaging.ImageLockMode.WriteOnly, old_img.PixelFormat);
+            System.Runtime.InteropServices.Marshal.Copy(pixels, 0, bmpd.Scan0, pixels.Length);
+            old_img.UnlockBits(bmpd);
+
+            return old_img;
         }
 
         public byte[] DownloadFile(string filename)
