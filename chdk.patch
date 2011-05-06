@@ -1,6 +1,6 @@
 Index: include/platform.h
 ===================================================================
---- include/platform.h	(revision 1150)
+--- include/platform.h	(revision 1174)
 +++ include/platform.h	(working copy)
 @@ -242,6 +242,17 @@
  void vid_turn_off_updates();
@@ -22,7 +22,7 @@ Index: include/platform.h
  void *hook_raw_fptr();
 Index: platform/g12/lib.c
 ===================================================================
---- platform/g12/lib.c	(revision 1150)
+--- platform/g12/lib.c	(revision 1174)
 +++ platform/g12/lib.c	(working copy)
 @@ -114,3 +114,5 @@
  int vid_get_viewport_row_offset() {
@@ -32,9 +32,9 @@ Index: platform/g12/lib.c
 +int vid_get_viewport_max_height() { return 480; }
 Index: platform/generic/wrappers.c
 ===================================================================
---- platform/generic/wrappers.c	(revision 1150)
+--- platform/generic/wrappers.c	(revision 1174)
 +++ platform/generic/wrappers.c	(working copy)
-@@ -1234,3 +1234,66 @@
+@@ -1266,3 +1266,66 @@
  }
  */
  
@@ -103,19 +103,8 @@ Index: platform/generic/wrappers.c
 +}
 Index: platform/ixus870_sd880/sub/101a/lib.c
 ===================================================================
---- platform/ixus870_sd880/sub/101a/lib.c	(revision 1150)
+--- platform/ixus870_sd880/sub/101a/lib.c	(revision 1174)
 +++ platform/ixus870_sd880/sub/101a/lib.c	(working copy)
-@@ -22,8 +22,8 @@
- 
- void *vid_get_viewport_live_fb()
- {
--    void **fb=(void **)0x227C;
--    unsigned char buff = *((unsigned char*)0x20DC);
-+    void **fb=(void **)0x725C; // 0xff8c2e9c
-+    unsigned char buff = *((unsigned char*)0x70D8); // 0xff8c2e24
-     if (buff == 0) buff = 2;  else buff--;    
-     return fb[buff];
- }
 @@ -77,3 +77,13 @@
  long vid_get_bitmap_buffer_width() { return 360; }
  
@@ -132,39 +121,45 @@ Index: platform/ixus870_sd880/sub/101a/lib.c
 +}
 Index: platform/ixus870_sd880/sub/102b/lib.c
 ===================================================================
---- platform/ixus870_sd880/sub/102b/lib.c	(revision 1150)
+--- platform/ixus870_sd880/sub/102b/lib.c	(revision 1174)
 +++ platform/ixus870_sd880/sub/102b/lib.c	(working copy)
-@@ -22,8 +22,8 @@
+@@ -77,3 +77,13 @@
+ long vid_get_bitmap_buffer_width() { return 360; }
  
- void *vid_get_viewport_live_fb()
- {
--    void **fb=(void **)0x227C;
--    unsigned char buff = *((unsigned char*)0x20DC);
-+    void **fb=(void **)0x725C;
-+    unsigned char buff = *((unsigned char*)0x70D8);
-     if (buff == 0) buff = 2;  else buff--;    
-     return fb[buff];
- }
+ long vid_get_bitmap_buffer_height() { return 240; }
++
++void vid_get_bitmap_active_palette(int *pal)
++{
++  unsigned int *syspal=*(unsigned int**)(0x7C50+0x20);
++  int i; 
++  for (i=0;i<16; i++) { 
++   pal[i]=syspal[i]; 
++   if ((pal[i]>>24)==3) pal[i]|=0xFF000000; 
++  } 
++}
 Index: platform/ixus870_sd880/sub/100e/lib.c
 ===================================================================
---- platform/ixus870_sd880/sub/100e/lib.c	(revision 1150)
+--- platform/ixus870_sd880/sub/100e/lib.c	(revision 1174)
 +++ platform/ixus870_sd880/sub/100e/lib.c	(working copy)
-@@ -22,8 +22,8 @@
+@@ -77,3 +77,13 @@
+ long vid_get_bitmap_buffer_width() { return 360; }
  
- void *vid_get_viewport_live_fb()
- {
--    void **fb=(void **)0x227C;
--    unsigned char buff = *((unsigned char*)0x20DC);
-+    void **fb=(void **)0x725C;
-+    unsigned char buff = *((unsigned char*)0x70D8);
-     if (buff == 0) buff = 2;  else buff--;    
-     return fb[buff];
- }
+ long vid_get_bitmap_buffer_height() { return 240; }
++
++void vid_get_bitmap_active_palette(int *pal)
++{
++  unsigned int *syspal=*(unsigned int**)(0x7C50+0x20);
++  int i; 
++  for (i=0;i<16; i++) { 
++   pal[i]=syspal[i]; 
++   if ((pal[i]>>24)==3) pal[i]|=0xFF000000; 
++  } 
++}
 Index: core/ptp.c
 ===================================================================
---- core/ptp.c	(revision 1150)
+--- core/ptp.c	(revision 1174)
 +++ core/ptp.c	(working copy)
-@@ -286,6 +286,7 @@
+@@ -288,6 +288,7 @@
        break;
  
      case PTP_CHDK_CallFunction:
@@ -172,7 +167,7 @@ Index: core/ptp.c
        {
          int s;
          int *buf = (int *) malloc((10+1)*sizeof(int));
-@@ -308,6 +309,10 @@
+@@ -310,6 +311,10 @@
  
          free(buf);
          break;
@@ -185,17 +180,17 @@ Index: core/ptp.c
      case PTP_CHDK_TempData:
 Index: core/ptp.h
 ===================================================================
---- core/ptp.h	(revision 1150)
+--- core/ptp.h	(revision 1174)
 +++ core/ptp.h	(working copy)
 @@ -1,6 +1,6 @@
  #ifndef __CHDK_PTP_H
  #define __CHDK_PTP_H
--#define PTP_CHDK_VERSION_MAJOR 1  // increase only with backwards incompatible changes (and reset minor)
+-#define PTP_CHDK_VERSION_MAJOR 2  // increase only with backwards incompatible changes (and reset minor)
 +#define PTP_CHDK_VERSION_MAJOR 0x10002  // increase only with backwards incompatible changes (and reset minor)
  #define PTP_CHDK_VERSION_MINOR 0  // increase with extensions of functionality
  /*
  protocol version history
-@@ -29,7 +29,10 @@
+@@ -30,7 +30,10 @@
    PTP_CHDK_SetMemory,       // param2 is address
                              // param3 is size (in bytes)
                              // data is new memory block
@@ -209,9 +204,9 @@ Index: core/ptp.h
                              // param2 is for the TD flags below
 Index: core/luascript.c
 ===================================================================
---- core/luascript.c	(revision 1150)
+--- core/luascript.c	(revision 1174)
 +++ core/luascript.c	(working copy)
-@@ -1359,6 +1359,96 @@
+@@ -1383,6 +1383,96 @@
    return switch_mode_usb(mode);
  }
  
@@ -308,7 +303,7 @@ Index: core/luascript.c
  /*
  pack the lua args into a buffer to pass to the native code calling functions 
  currently only handles strings/numbers
-@@ -1715,6 +1805,7 @@
+@@ -1739,6 +1829,7 @@
     FUNC(set_record);
  
     FUNC(switch_mode_usb);
