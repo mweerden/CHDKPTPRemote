@@ -316,7 +316,6 @@ namespace CHDKPTPRemote
 
             byte[] img;
             _session.CHDK_CallFunction(image_tranfer_function, 0xc, 0, out img);
-            File.WriteAllBytes("live_overlay.bmp",img);
 
             int palette_start = 1;
             int image_start = 1;

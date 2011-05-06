@@ -74,6 +74,10 @@ Bitmap GetLiveImage(out Rectangle active_area, Bitmap old_img = null)
   border. The active_area indicates which part of the image contains the actual
   contents.
 
+Bitmap GetLiveOverlay(Bitmap old_img = null)
+  Same as GetLiveImage but for the camera's bitmap overlay. PixelFormat of
+  Bitmap should be Format32bppArgb.
+
 byte[] DownloadFile(string filename)
   Retrieves filename from the camera. Note that filename should contain a valid
   path (i.e. one starting with "A/").

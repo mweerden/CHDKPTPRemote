@@ -50,9 +50,9 @@ namespace CHDKPTP
             return true;
         }
 
-        public void CHDK_GetMemory(uint addr, int size, int flags, out byte[] data)
+        public void CHDK_GetMemory(uint addr, int size, out byte[] data)
         {
-            SendCHDKCommand(CHDK_PTP_Command.PTP_CHDK_GetMemory, out data, 3, (int)addr, size, flags);
+            SendCHDKCommand(CHDK_PTP_Command.PTP_CHDK_GetMemory, out data, 2, (int)addr, size);
             Ensure_PTP_RC_OK();
         }
 
