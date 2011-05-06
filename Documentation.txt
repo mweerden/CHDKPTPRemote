@@ -6,10 +6,6 @@ April 29, 2011
 CHDKPTPRemote is a .NET 4.0 library written in C# for working with cameras via
 CHDK PTP[1,2]. It uses the LibUsbDotNet[3] library for USB communication.
 
-At the moment of this writing the library requires a specially patched CHDK to
-use the live-image functionality. This is also the reason it checks for an
-"odd" CHDK PTP version (major 0x10002, minor 0).
-
 Currently the library is build up as follows.
 
   LibUsbDotNet -- PTP -- CHDKPTP -- CHDKPTPRemote
@@ -17,7 +13,7 @@ Currently the library is build up as follows.
 PTP uses LibUsbDotNet to provide a PTP interface for communicating with
 devices. CHDKPTP extends PTP for support of CHDK PTP specific functionality.
 Finally, CHDKPTPRemote provides a simple interface with the most basic
-essential operations such as script execution and live image retrieval.
+essential operations such as script execution.
 
 Except for LibUsbDotNet, the libraries use Exceptions when unexpected behaviour
 is encountered. It is best to enclose all calls in try blocks and handle these
@@ -52,27 +48,6 @@ object ExecuteScript(string script, bool return_string_as_byte_array = false)
   ASCII; if not desired - because the string contains binary data, for example
   - setting the return_string_as_byte_array parameter to true results in the
   string being returned as is as a byte[] object.
-
-void GetDisplayDimensions(out int width, out int height)
-  Sets width and height to the display dimensions of the camera. Note that
-  these dimensions need not correspond to the dimensions of the live images.
-  Typically the camera "stretches" the live image to the display dimensions
-  when displaying it. For example, a typical display width is 360, while live
-  images are often 720 pixels wide.
-
-Bitmap GetLiveImage(Bitmap old_img = null)
-  Get the current live image as a Bitmap. The bitmap has uses
-  PixelFormat.Format24bppRgb. For efficiency one can supply a previously made
-  Bitmap as old_img. In this case old_img is used to copy the live image to
-  instead of making a new Bitmap object. Note that the supplied Bitmap should
-  be appropriate (w.r.t. PixelFormat and dimensions); ideally one only supplies
-  Bitmaps previously returned by GetLiveImage.
-
-Bitmap GetLiveImage(out Rectangle active_area, Bitmap old_img = null)
-  Same as above, but also retrieves the "active area" of the live image. For
-  various aspect ratios the live image is typically surrounded by a black
-  border. The active_area indicates which part of the image contains the actual
-  contents.
 
 byte[] DownloadFile(string filename)
   Retrieves filename from the camera. Note that filename should contain a valid
@@ -137,15 +112,6 @@ Taking a picture:
 Downloading image:
 
   File.WriteAllBytes("IMG_0001.JPG",session.DownloadFile("A/DCIM/100CANON/IMG_0001.JPG"));
-
-
-Draw live image:
-
-  int width,height;
-  session.GetDisplayDimensions(out width, out height);
-
-  Graphics g = ...;
-  g.DrawImage(session.GetLiveImage(),0,0,width,height);
 
 
 

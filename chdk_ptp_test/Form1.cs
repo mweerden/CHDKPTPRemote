@@ -119,18 +119,6 @@ namespace chdk_ptp_test
             LogLine("connected.");
             connected = true;
             statuslabel.Text = "Connected to: " + connected_device.ToString();
-
-            try
-            {
-                LogLine("getting display dimensions...");
-                session.GetDisplayDimensions(out display_width, out display_height);
-                LogLine("got "+display_width+"x"+display_height);
-            }
-            catch (Exception ex)
-            {
-                LogLine("exception: " + ex.Message + Environment.NewLine + ex.StackTrace);
-                MessageBox.Show("could not get display dimensions: " + ex.Message + "\n\n" + ex.StackTrace);
-            }
         }
 
         private void disconnectbutton_Click(object sender, EventArgs e)
@@ -158,28 +146,6 @@ namespace chdk_ptp_test
         {
             if (!connected)
                 return;
-
-            LogLine("getting live image...");
-            try
-            {
-                if (live_image == null)
-                {
-                    live_image = session.GetLiveImage();
-                }
-                else
-                {
-                    session.GetLiveImage(live_image);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogLine("exception: " + ex.Message + Environment.NewLine + ex.StackTrace.ToString());
-                MessageBox.Show("could not get live image: " + ex.Message + "\n\n" + ex.StackTrace.ToString());
-                return;
-            }
-
-            Invalidate();
-            LogLine("done.");
         }
 
         private void recordbutton_Click(object sender, EventArgs e)
@@ -288,29 +254,6 @@ namespace chdk_ptp_test
         {
             if (!connected)
                 return;
-
-            LogLine("getting live overlay...");
-            try
-            {
-                if (live_overlay == null)
-                {
-                    live_overlay = session.GetLiveOverlay();
-                }
-                else
-                {
-                    session.GetLiveOverlay(live_overlay);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogLine("exception: " + ex.Message + Environment.NewLine + ex.StackTrace.ToString());
-                MessageBox.Show("could not get live overlay: " + ex.Message + "\n\n" + ex.StackTrace.ToString());
-                return;
-            }
-
-            Invalidate();
-            LogLine("done.");
-
         }
 
         private void Form1_Paint(object sender, PaintEventArgs e)

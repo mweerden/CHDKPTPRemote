@@ -99,6 +99,7 @@ namespace chdk_ptp_test
             // 
             // getimagebutton
             // 
+            this.getimagebutton.Enabled = false;
             this.getimagebutton.Location = new System.Drawing.Point(12, 118);
             this.getimagebutton.Name = "getimagebutton";
             this.getimagebutton.Size = new System.Drawing.Size(75, 23);
@@ -174,6 +175,7 @@ namespace chdk_ptp_test
             // 
             // overlaybutton
             // 
+            this.overlaybutton.Enabled = false;
             this.overlaybutton.Location = new System.Drawing.Point(93, 118);
             this.overlaybutton.Name = "overlaybutton";
             this.overlaybutton.Size = new System.Drawing.Size(75, 23);

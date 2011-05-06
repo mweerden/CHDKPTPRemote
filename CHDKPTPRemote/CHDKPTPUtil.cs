@@ -13,7 +13,7 @@ namespace CHDKPTP
 {
     public static class CHDKPTPUtil
     {
-        public static int CHDK_VERSION_MAJOR = 0x10002;
+        public static int CHDK_VERSION_MAJOR = 2;
         public static int CHDK_VERSION_MINOR = 0;
 
         private static CHDKPTPDevice CheckSupported(PTPDevice ptpdev)
